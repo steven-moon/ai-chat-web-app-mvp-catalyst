@@ -1,15 +1,20 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MenuIcon, XIcon, UserIcon, LogIn } from "lucide-react";
+import { MenuIcon, XIcon, UserIcon, LogIn, LogOut } from "lucide-react";
 import ThemeToggle from "../theme/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useUser();
+  const { toast } = useToast();
 
   // Check if user has scrolled
   useEffect(() => {
@@ -25,13 +30,32 @@ const Navbar: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Navigation links
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Chat", path: "/chat" },
-    { name: "History", path: "/history" },
-    { name: "Pricing", path: "/pricing" },
-  ];
+  // Navigation links based on authentication status
+  const getNavLinks = () => {
+    if (isAuthenticated) {
+      return [
+        { name: "Chat", path: "/chat" },
+        { name: "History", path: "/history" },
+        { name: "Profile", path: "/profile" },
+      ];
+    } else {
+      return [
+        { name: "Home", path: "/" },
+        { name: "Pricing", path: "/pricing" },
+      ];
+    }
+  };
+
+  const navLinks = getNavLinks();
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    navigate("/");
+  };
 
   return (
     <header
@@ -82,20 +106,32 @@ const Navbar: React.FC = () => {
           
           {/* Auth buttons */}
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login" className="flex items-center gap-1">
-                <LogIn className="h-4 w-4" />
-                Login
-              </Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link to="/signup">Sign up</Link>
-            </Button>
-            <Link to="/profile" className="ml-2">
-              <Button variant="outline" size="icon" className="rounded-full">
-                <UserIcon className="h-4 w-4" />
+            {isAuthenticated ? (
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-1">
+                <LogOut className="h-4 w-4" />
+                Logout
               </Button>
-            </Link>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/login" className="flex items-center gap-1">
+                    <LogIn className="h-4 w-4" />
+                    Login
+                  </Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/signup">Sign up</Link>
+                </Button>
+              </>
+            )}
+            
+            {isAuthenticated && (
+              <Link to="/profile" className="ml-2">
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <UserIcon className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
           </div>
           
           <ThemeToggle />
@@ -139,24 +175,39 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
-            <Link
-              to="/login"
-              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
-            >
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md"
-            >
-              Sign up
-            </Link>
-            <Link
-              to="/profile"
-              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
-            >
-              Profile
-            </Link>
+            
+            {isAuthenticated ? (
+              <button 
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-left"
+              >
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
+            
+            {isAuthenticated && (
+              <Link
+                to="/profile"
+                className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+              >
+                Profile
+              </Link>
+            )}
           </nav>
         </motion.div>
       )}

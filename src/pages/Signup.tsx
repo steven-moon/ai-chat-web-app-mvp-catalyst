@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import MainLayout from "../components/layout/MainLayout";
+import { useUser } from "@/contexts/UserContext";
 
 const Signup: React.FC = () => {
   const [name, setName] = useState("");
@@ -18,6 +19,7 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signup } = useUser();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +27,6 @@ const Signup: React.FC = () => {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       // Simple validation
       if (!name || !email || !password) {
         setError("Please fill out all required fields");
@@ -47,14 +46,17 @@ const Signup: React.FC = () => {
         return;
       }
       
-      // Mock successful signup
+      // Use the context's signup function
+      await signup(name, email, password);
+      
+      // Show success toast
       toast({
         title: "Account created",
         description: "You've successfully signed up",
       });
       
-      // Navigate to profile page after signup
-      navigate("/profile");
+      // Navigate to chat page after signup
+      navigate("/chat");
     } catch (err) {
       setError("Sign up failed. Please try again.");
     } finally {

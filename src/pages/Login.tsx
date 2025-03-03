@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import MainLayout from "../components/layout/MainLayout";
+import { useUser } from "@/contexts/UserContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -16,17 +17,14 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login } = useUser();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     
-    // For demo purposes - simulate login
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       // Simple validation
       if (!email || !password) {
         setError("Please enter both email and password");
@@ -34,14 +32,17 @@ const Login: React.FC = () => {
         return;
       }
       
-      // Mock successful login
+      // Use the context's login function
+      await login(email, password);
+      
+      // Show success toast
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
       
       // Navigate to profile page after login
-      navigate("/profile");
+      navigate("/chat");
     } catch (err) {
       setError("Login failed. Please check your credentials.");
     } finally {
