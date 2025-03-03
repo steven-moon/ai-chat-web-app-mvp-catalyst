@@ -30,7 +30,7 @@ const aiProviders = [
 const welcomeMessage = {
   id: "welcome",
   content: "Hello! How can I assist you today?",
-  sender: "ai",
+  sender: "ai" as const,
   timestamp: new Date(),
 };
 
@@ -54,7 +54,7 @@ const Chat: React.FC = () => {
     const userMessage = {
       id: Date.now().toString(),
       content,
-      sender: "user",
+      sender: "user" as const, // Fix: Explicitly type as "user" literal
       timestamp: new Date(),
     };
     
@@ -66,7 +66,7 @@ const Chat: React.FC = () => {
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         content: `This is a simulated response from ${selectedProvider.name}. In a real application, this would be a response from the actual AI provider.`,
-        sender: "ai",
+        sender: "ai" as const, // Fix: Explicitly type as "ai" literal
         timestamp: new Date(),
       };
       
