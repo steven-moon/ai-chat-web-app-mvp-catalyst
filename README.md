@@ -1,69 +1,122 @@
-# Welcome to your Lovable project
+# AI Chat Web Application
 
-## Project info
+A modern, responsive web application for interacting with various AI models through a chat interface. This application provides a seamless experience for users to engage with AI assistants, manage chat history, and customize their profiles.
 
-**URL**: https://lovable.dev/projects/28a805c9-86b6-448a-a61f-f5656d2ec32c
+## Features
 
-## How can I edit this code?
+- **Multi-Provider AI Chat**: Interact with different AI models through a unified interface
+- **Chat History Management**: Save, browse, and continue previous conversations
+- **User Authentication**: Secure login and signup functionality
+- **User Profile Management**: Customize user settings and preferences
+- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Modern UI**: Built with Shadcn UI components and Tailwind CSS for a sleek, modern look
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend Framework**: React with TypeScript
+- **Routing**: React Router
+- **Styling**: Tailwind CSS with Shadcn UI components
+- **State Management**: React Context API
+- **Animations**: Framer Motion
+- **Form Handling**: React Hook Form with Zod validation
+- **Notifications**: Sonner toast notifications
+- **Build Tool**: Vite
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/28a805c9-86b6-448a-a61f-f5656d2ec32c) and start prompting.
+## Project Structure
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── components/         # UI components
+│   ├── chat/           # Chat-related components
+│   ├── history/        # History-related components
+│   ├── home/           # Home page components
+│   ├── layout/         # Layout components (Navbar, MainLayout)
+│   ├── theme/          # Theme-related components
+│   └── ui/             # Shadcn UI components
+├── contexts/           # React contexts for state management
+│   ├── ChatContext.tsx # Chat state management
+│   └── UserContext.tsx # User authentication and profile management
+├── data/               # Mock data and constants
+├── hooks/              # Custom React hooks
+├── lib/                # Utility libraries
+├── pages/              # Application pages
+│   ├── Chat.tsx        # Chat interface
+│   ├── History.tsx     # Chat history
+│   ├── Index.tsx       # Landing page
+│   ├── Login.tsx       # Login page
+│   ├── NotFound.tsx    # 404 page
+│   ├── Pricing.tsx     # Pricing information
+│   ├── Profile.tsx     # User profile management
+│   └── Signup.tsx      # Signup page
+├── types/              # TypeScript type definitions
+├── utils/              # Utility functions
+├── App.tsx             # Main application component
+└── main.tsx            # Application entry point
 ```
 
-**Edit a file directly in GitHub**
+## Getting Started
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Prerequisites
 
-**Use GitHub Codespaces**
+- Node.js (v16 or higher)
+- npm or yarn
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Installation
 
-## What technologies are used for this project?
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/ai-chat-web-app.git
+   cd ai-chat-web-app
+   ```
 
-This project is built with .
+2. Install dependencies
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+3. Start the development server
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-## How can I deploy this project?
+4. Open your browser and navigate to `http://localhost:5173`
 
-Simply open [Lovable](https://lovable.dev/projects/28a805c9-86b6-448a-a61f-f5656d2ec32c) and click on Share -> Publish.
+## Building for Production
 
-## I want to use a custom domain - is that possible?
+```bash
+npm run build
+# or
+yarn build
+```
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+The built files will be in the `dist` directory.
+
+## Development
+
+```bash
+# Start development server
+npm run dev
+
+# Lint code
+npm run lint
+
+# Preview production build
+npm run preview
+```
+
+## Credits
+
+This MVP Catalyst Prototype was created by [Clever Coding](https://clevercoding.com). The development process was accelerated with the assistance of AI tools:
+
+- **Lovable**: Used for rapid UI prototyping and design
+- **Cursor**: AI-powered code editor that enhanced development efficiency
+
+Learn more about Clever Coding's innovative development approaches at [clevercoding.com](https://clevercoding.com).
+
+## License
+
+[MIT](LICENSE)
