@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -99,10 +100,17 @@ const Navbar: React.FC = () => {
           
           <div className="flex items-center space-x-2">
             {isAuthenticated ? (
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-1">
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
+              <>
+                <Link to="/profile">
+                  <Button variant="outline" size="icon" className="rounded-full">
+                    <UserIcon className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-1">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
@@ -115,14 +123,6 @@ const Navbar: React.FC = () => {
                   <Link to="/signup">Sign up</Link>
                 </Button>
               </>
-            )}
-            
-            {isAuthenticated && (
-              <Link to="/profile">
-                <Button variant="outline" size="icon" className="rounded-full">
-                  <UserIcon className="h-4 w-4" />
-                </Button>
-              </Link>
             )}
           </div>
           
