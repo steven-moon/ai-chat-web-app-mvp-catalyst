@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -16,7 +15,6 @@ const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useUser();
   const { toast } = useToast();
 
-  // Check if user has scrolled
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -25,18 +23,15 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Navigation links based on authentication status
   const getNavLinks = () => {
     if (isAuthenticated) {
       return [
         { name: "Chat", path: "/chat" },
         { name: "History", path: "/history" },
-        { name: "Profile", path: "/profile" },
       ];
     } else {
       return [
@@ -66,7 +61,6 @@ const Navbar: React.FC = () => {
       }`}
     >
       <div className="container flex items-center justify-between">
-        {/* Logo */}
         <Link to="/" className="flex items-center">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -77,7 +71,6 @@ const Navbar: React.FC = () => {
           </motion.div>
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
             {navLinks.map((link) => (
@@ -104,7 +97,6 @@ const Navbar: React.FC = () => {
             ))}
           </nav>
           
-          {/* Auth buttons */}
           <div className="flex items-center space-x-2">
             {isAuthenticated ? (
               <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-1">
@@ -126,7 +118,7 @@ const Navbar: React.FC = () => {
             )}
             
             {isAuthenticated && (
-              <Link to="/profile" className="ml-2">
+              <Link to="/profile">
                 <Button variant="outline" size="icon" className="rounded-full">
                   <UserIcon className="h-4 w-4" />
                 </Button>
@@ -137,7 +129,6 @@ const Navbar: React.FC = () => {
           <ThemeToggle />
         </div>
 
-        {/* Mobile Navigation Toggle */}
         <div className="md:hidden flex items-center space-x-4">
           <ThemeToggle />
           <button
@@ -153,7 +144,6 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -177,12 +167,20 @@ const Navbar: React.FC = () => {
             ))}
             
             {isAuthenticated ? (
-              <button 
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-left"
-              >
-                Logout
-              </button>
+              <>
+                <Link
+                  to="/profile"
+                  className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+                >
+                  Profile
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary text-left"
+                >
+                  Logout
+                </button>
+              </>
             ) : (
               <>
                 <Link
@@ -198,15 +196,6 @@ const Navbar: React.FC = () => {
                   Sign up
                 </Link>
               </>
-            )}
-            
-            {isAuthenticated && (
-              <Link
-                to="/profile"
-                className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
-              >
-                Profile
-              </Link>
             )}
           </nav>
         </motion.div>
