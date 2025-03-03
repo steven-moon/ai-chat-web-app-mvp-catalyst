@@ -250,8 +250,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           timestamp: new Date(),
         };
         
-        // Update title and preview if this is the first or second message
-        if (updatedMessages.length <= 2 && chat.title === "New Conversation" && messageData.sender === "user") {
+        // Update title if this is the first user message and title is still default
+        if (messageData.sender === "user" && 
+            (chat.title === "New Conversation" || chat.title === "Start a new conversation...")) {
           updatedChat.title = messageData.content.substring(0, 30) + (messageData.content.length > 30 ? "..." : "");
         }
         

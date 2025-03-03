@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -81,7 +80,7 @@ const Chat: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = async (content: string) => {
     if (!currentChat) return;
     
     // Add user message
@@ -95,13 +94,11 @@ const Chat: React.FC = () => {
     
     // Simulate AI response after a delay
     setTimeout(() => {
-      if (currentChat) {
-        addMessage(currentChat.id, {
-          content: `This is a simulated response from ${selectedProvider.name}. In a real application, this would be a response from the actual AI provider.`,
-          sender: "ai",
-          timestamp: new Date(),
-        });
-      }
+      addMessage(currentChat.id, {
+        content: `This is a simulated response from ${selectedProvider.name}. In a real application, this would be a response from the actual AI provider.`,
+        sender: "ai",
+        timestamp: new Date(),
+      });
       setIsProcessing(false);
     }, 1500);
   };
