@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { UserIcon } from "lucide-react";
@@ -58,10 +57,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, aiProvider }) => {
         >
           <div className="text-sm">
             {message.content.split("\n").map((text, i) => (
-              <React.Fragment key={i}>
+              <div key={`${message.id}-line-${i}`} className="message-line">
                 {text}
                 {i < message.content.split("\n").length - 1 && <br />}
-              </React.Fragment>
+              </div>
             ))}
           </div>
           <div

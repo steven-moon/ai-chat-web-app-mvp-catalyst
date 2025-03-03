@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Settings, History, LogOut } from "lucide-react";
+import { User, Settings as SettingsIcon, History, LogOut } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import MainLayout from "../components/layout/MainLayout";
 import { useUser } from "@/contexts/UserContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Profile: React.FC = () => {
   const { user, isAuthenticated, logout, updateProfile } = useUser();
@@ -176,14 +175,16 @@ const Profile: React.FC = () => {
                 <CardContent className="pb-2">
                   <nav className="space-y-2">
                     <Button variant="ghost" className="w-full justify-start" asChild>
-                      <a href="/history">
+                      <Link to="/history">
                         <History className="mr-2 h-4 w-4" />
                         Chat History
-                      </a>
+                      </Link>
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Account Settings
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Link to="/settings">
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        API Settings
+                      </Link>
                     </Button>
                     <Button 
                       variant="ghost" 

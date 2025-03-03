@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
 import ProcessingIndicator from "./ProcessingIndicator";
@@ -24,6 +23,14 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   // Scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Add debugging log
+  useEffect(() => {
+    console.log("ChatMessages received messages:", messages.length);
+    messages.forEach((msg, index) => {
+      console.log(`Message ${index}: ${msg.sender} - ${msg.content.substring(0, 20)}...`);
+    });
   }, [messages]);
 
   return (

@@ -9,6 +9,11 @@ export interface User {
   preferences?: {
     defaultProvider?: string;
     historyRetention?: string;
+    apiKeys?: {
+      openAI?: string;
+      googleGemini?: string;
+      anthropic?: string;
+    };
   };
 }
 

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,7 @@ import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -32,6 +32,7 @@ const App = () => (
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />

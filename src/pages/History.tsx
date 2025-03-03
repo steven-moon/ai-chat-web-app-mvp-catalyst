@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { SearchIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { SearchIcon, PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
 import MainLayout from "../components/layout/MainLayout";
 import HistoryItem from "../components/history/HistoryItem";
 import { useChat } from "../contexts/ChatContext";
@@ -12,9 +11,10 @@ import { Button } from "@/components/ui/button";
 
 const History: React.FC = () => {
   const { user, isAuthenticated } = useUser();
-  const { chats, addChat, deleteChat } = useChat();
+  const { chats, addChat, deleteChat, isLoading } = useChat();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
   const navigate = useNavigate();
 
   // Filter chats based on search query
@@ -25,24 +25,34 @@ const History: React.FC = () => {
       chat.provider.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
     if (!isAuthenticated) {
       toast.error("Please log in to start a new chat");
       navigate("/login");
       return;
     }
     
-    const newChatId = addChat("OpenAI");
-    navigate(`/chat?id=${newChatId}`);
+    setIsCreatingChat(true);
+    try {
+      const newChatId = await addChat("OpenAI");
+      if (newChatId) {
+        navigate(`/chat?id=${newChatId}`);
+      } else {
+        toast.error("Failed to create new chat");
+      }
+    } catch (error) {
+      console.error("Error creating chat:", error);
+      toast.error("Failed to create new chat");
+    } finally {
+      setIsCreatingChat(false);
+    }
   };
 
   const handleDeleteChat = async (chatId: string) => {
     setIsDeleting(chatId);
     
     try {
-      // Simulate a small delay for user feedback
-      await new Promise(resolve => setTimeout(resolve, 300));
-      deleteChat(chatId);
+      await deleteChat(chatId);
       toast.success("Chat deleted successfully");
     } catch (error) {
       toast.error("Failed to delete chat");
@@ -75,10 +85,15 @@ const History: React.FC = () => {
                 >
                   <Button
                     onClick={handleNewChat}
+                    disabled={isCreatingChat}
                     className="w-full md:w-auto flex items-center gap-2"
                   >
-                    <PlusIcon className="h-4 w-4" />
-                    New Chat
+                    {isCreatingChat ? (
+                      <Loader2Icon className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <PlusIcon className="h-4 w-4" />
+                    )}
+                    {isCreatingChat ? "Creating..." : "New Chat"}
                   </Button>
                 </motion.div>
 
@@ -101,8 +116,13 @@ const History: React.FC = () => {
               </div>
             </div>
 
-            {/* History list */}
-            {isAuthenticated ? (
+            {/* Loading state */}
+            {isLoading && !isDeleting && !isCreatingChat ? (
+              <div className="flex justify-center items-center py-16">
+                <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading chats...</span>
+              </div>
+            ) : isAuthenticated ? (
               filteredChats.length > 0 ? (
                 <div className="space-y-4">
                   {filteredChats.map((chat, index) => (
@@ -153,9 +173,13 @@ const History: React.FC = () => {
                       : "No chat history yet"}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={handleNewChat}>
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Start a new chat
+                    <Button onClick={handleNewChat} disabled={isCreatingChat}>
+                      {isCreatingChat ? (
+                        <Loader2Icon className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <PlusIcon className="h-4 w-4 mr-2" />
+                      )}
+                      {isCreatingChat ? "Creating..." : "Start a new chat"}
                     </Button>
                   )}
                 </motion.div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ChatSession, Message } from "../types/chat";
 import { 
@@ -95,13 +94,32 @@ export const useChatOperations = (
     if (!userId) return;
 
     const newMessage: Message = {
-      id: "msg-" + Date.now(),
+      id: `msg-${messageData.sender}-${Date.now()}`,
       ...messageData,
     };
 
     const updatedChats = chats.map(chat => {
       if (chat.id === chatId) {
-        const updatedMessages = [...chat.messages, newMessage];
+        // Create a map of existing messages by sender and timestamp to detect potential duplicates
+        const existingMessageMap = new Map();
+        chat.messages.forEach(msg => {
+          const key = `${msg.sender}-${msg.timestamp.toString().substring(0, 15)}`;
+          existingMessageMap.set(key, true);
+        });
+        
+        // Check if this message might be a duplicate (same sender and similar timestamp)
+        const newMessageKey = `${newMessage.sender}-${newMessage.timestamp.toString().substring(0, 15)}`;
+        const isDuplicate = existingMessageMap.has(newMessageKey);
+        
+        // Always preserve all existing messages and add the new one
+        // Don't replace any messages, just append
+        const updatedMessages = [...chat.messages];
+        
+        // Only add if it's not a potential duplicate
+        if (!isDuplicate) {
+          updatedMessages.push(newMessage);
+        }
+        
         const updatedChat: ChatSession = {
           ...chat,
           messages: updatedMessages,
