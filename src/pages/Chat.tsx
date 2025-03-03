@@ -7,6 +7,14 @@ import MainLayout from "../components/layout/MainLayout";
 import ChatMessage from "../components/chat/ChatMessage";
 import ChatInput from "../components/chat/ChatInput";
 
+// Define Message type to match ChatMessage component props
+interface Message {
+  id: string;
+  content: string;
+  sender: "user" | "ai";
+  timestamp: Date;
+}
+
 // Example AI providers for the selector
 const aiProviders = [
   {
@@ -27,10 +35,10 @@ const aiProviders = [
 ];
 
 // Example initial message
-const welcomeMessage = {
+const welcomeMessage: Message = {
   id: "welcome",
   content: "Hello! How can I assist you today?",
-  sender: "ai" as const,
+  sender: "ai",
   timestamp: new Date(),
 };
 
@@ -38,7 +46,7 @@ const Chat: React.FC = () => {
   const [searchParams] = useSearchParams();
   const chatId = searchParams.get("id");
   
-  const [messages, setMessages] = useState([welcomeMessage]);
+  const [messages, setMessages] = useState<Message[]>([welcomeMessage]);
   const [selectedProvider, setSelectedProvider] = useState(aiProviders[0]);
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -51,10 +59,10 @@ const Chat: React.FC = () => {
 
   const handleSendMessage = (content: string) => {
     // Add user message
-    const userMessage = {
+    const userMessage: Message = {
       id: Date.now().toString(),
       content,
-      sender: "user" as const, // Fix: Explicitly type as "user" literal
+      sender: "user",
       timestamp: new Date(),
     };
     
@@ -63,10 +71,10 @@ const Chat: React.FC = () => {
     
     // Simulate AI response after a delay
     setTimeout(() => {
-      const aiMessage = {
+      const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: `This is a simulated response from ${selectedProvider.name}. In a real application, this would be a response from the actual AI provider.`,
-        sender: "ai" as const, // Fix: Explicitly type as "ai" literal
+        sender: "ai",
         timestamp: new Date(),
       };
       
