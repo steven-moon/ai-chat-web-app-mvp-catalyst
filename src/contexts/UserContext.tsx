@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 // User interface
 export interface User {
@@ -35,54 +35,88 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Mock login functionality - in a real app, this would make an API call
+  // Login functionality - checks credentials against localStorage
   const login = async (email: string, password: string) => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Mock user data
-    const mockUser: User = {
-      id: "user-123",
-      name: "John Doe",
-      email: email,
-      avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=John",
+    // Check if email exists in localStorage
+    const usersJson = localStorage.getItem("users");
+    if (!usersJson) {
+      throw new Error("Invalid credentials");
+    }
+    
+    const users = JSON.parse(usersJson);
+    const foundUser = users.find((u: any) => u.email === email);
+    
+    if (!foundUser || foundUser.password !== password) {
+      throw new Error("Invalid credentials");
+    }
+    
+    // Create user object (without password)
+    const authenticatedUser: User = {
+      id: foundUser.id,
+      name: foundUser.name,
+      email: foundUser.email,
+      avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${foundUser.name}`,
     };
     
     // Store in localStorage for persistence across refreshes
-    localStorage.setItem("user", JSON.stringify(mockUser));
+    localStorage.setItem("currentUser", JSON.stringify(authenticatedUser));
     localStorage.setItem("isAuthenticated", "true");
     
     // Update state
-    setUser(mockUser);
+    setUser(authenticatedUser);
     setIsAuthenticated(true);
   };
 
-  // Mock signup functionality
+  // Signup functionality - stores user data in localStorage
   const signup = async (name: string, email: string, password: string) => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Mock user data
-    const mockUser: User = {
+    // Check if email already exists
+    const usersJson = localStorage.getItem("users");
+    const users = usersJson ? JSON.parse(usersJson) : [];
+    
+    if (users.some((u: any) => u.email === email)) {
+      throw new Error("Email already in use");
+    }
+    
+    // Create new user
+    const newUser = {
       id: "user-" + Math.floor(Math.random() * 1000),
-      name: name,
-      email: email,
+      name,
+      email,
+      password, // In a real app, this would be hashed
       avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${name}`,
     };
     
+    // Add to users array
+    users.push(newUser);
+    localStorage.setItem("users", JSON.stringify(users));
+    
+    // Create user object (without password) for state
+    const authenticatedUser: User = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      avatar: newUser.avatar,
+    };
+    
     // Store in localStorage
-    localStorage.setItem("user", JSON.stringify(mockUser));
+    localStorage.setItem("currentUser", JSON.stringify(authenticatedUser));
     localStorage.setItem("isAuthenticated", "true");
     
     // Update state
-    setUser(mockUser);
+    setUser(authenticatedUser);
     setIsAuthenticated(true);
   };
 
   // Logout functionality
   const logout = () => {
     // Clear from localStorage
-    localStorage.removeItem("user");
+    localStorage.removeItem("currentUser");
     localStorage.removeItem("isAuthenticated");
     
     // Update state
@@ -91,8 +125,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Check if user is already logged in (from localStorage)
-  React.useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+  useEffect(() => {
+    const storedUser = localStorage.getItem("currentUser");
     const storedAuthStatus = localStorage.getItem("isAuthenticated");
     
     if (storedUser && storedAuthStatus === "true") {

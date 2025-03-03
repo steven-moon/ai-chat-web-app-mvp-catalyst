@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, Mail, Lock, User, AlertCircle } from "lucide-react";
+import { UserPlus, Mail, Lock, User, AlertCircle, Info } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import MainLayout from "../components/layout/MainLayout";
 import { useUser } from "@/contexts/UserContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Signup: React.FC = () => {
   const [name, setName] = useState("");
@@ -58,7 +59,11 @@ const Signup: React.FC = () => {
       // Navigate to chat page after signup
       navigate("/chat");
     } catch (err) {
-      setError("Sign up failed. Please try again.");
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Sign up failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -81,6 +86,14 @@ const Signup: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <Alert className="mb-6 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  This is a demo application. User credentials are stored in your browser's localStorage and are not secure. 
+                  Please do not use real passwords or sensitive information.
+                </AlertDescription>
+              </Alert>
+              
               <form onSubmit={handleSignup} className="space-y-4">
                 {error && (
                   <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md flex items-center gap-2 text-sm">

@@ -41,10 +41,10 @@ const Login: React.FC = () => {
         description: "Welcome back!",
       });
       
-      // Navigate to profile page after login
+      // Navigate to chat page after login
       navigate("/chat");
     } catch (err) {
-      setError("Login failed. Please check your credentials.");
+      setError("Invalid email or password");
     } finally {
       setLoading(false);
     }
