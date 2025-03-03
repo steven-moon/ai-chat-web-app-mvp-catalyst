@@ -27,15 +27,17 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
     >
-      <Link to={`/chat?id=${id}`}>
-        <div className="p-5 rounded-xl border border-border hover:border-primary/30 bg-card hover:bg-card/60 transition-all duration-300">
+      <Link to={`/chat?id=${id}`} className="block">
+        <div className="p-5 pr-10 rounded-xl border border-border hover:border-primary/30 bg-card hover:bg-card/60 transition-all duration-300">
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
               <MessageSquareIcon className="h-5 w-5" />
             </div>
             <div className="flex-grow">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-card-foreground line-clamp-1">{title}</h3>
+                <h3 className="font-medium text-card-foreground line-clamp-1">
+                  {title}
+                </h3>
                 <span className="text-xs text-muted-foreground">
                   {new Date(timestamp).toLocaleDateString()}
                 </span>

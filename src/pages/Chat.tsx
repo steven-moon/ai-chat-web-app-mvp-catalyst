@@ -1,21 +1,17 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BrainIcon, MessageSquareIcon } from "lucide-react";
+import { toast } from "sonner";
+import { BrainIcon, MessageSquareIcon, PlusIcon, XIcon, ArrowLeftIcon } from "lucide-react";
 import MainLayout from "../components/layout/MainLayout";
 import ChatMessage from "../components/chat/ChatMessage";
 import ChatInput from "../components/chat/ChatInput";
+import { Button } from "@/components/ui/button";
+import { useChat } from "../contexts/ChatContext";
+import { useUser } from "../contexts/UserContext";
 
-// Define Message type to match ChatMessage component props
-interface Message {
-  id: string;
-  content: string;
-  sender: "user" | "ai";
-  timestamp: Date;
-}
-
-// Example AI providers for the selector
+// AI providers for the selector
 const aiProviders = [
   {
     id: "openai",
@@ -34,53 +30,85 @@ const aiProviders = [
   },
 ];
 
-// Example initial message
-const welcomeMessage: Message = {
-  id: "welcome",
-  content: "Hello! How can I assist you today?",
-  sender: "ai",
-  timestamp: new Date(),
-};
-
 const Chat: React.FC = () => {
+  const { isAuthenticated } = useUser();
+  const { chats, currentChat, setCurrentChat, addChat, addMessage } = useChat();
   const [searchParams] = useSearchParams();
   const chatId = searchParams.get("id");
+  const navigate = useNavigate();
   
-  const [messages, setMessages] = useState<Message[]>([welcomeMessage]);
   const [selectedProvider, setSelectedProvider] = useState(aiProviders[0]);
   const [isProcessing, setIsProcessing] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load chat data when chatId changes
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    if (chatId) {
+      const chatToLoad = chats.find(chat => chat.id === chatId);
+      if (chatToLoad) {
+        setCurrentChat(chatToLoad);
+        
+        // Set the selected provider based on the chat's provider
+        const providerToSelect = aiProviders.find(p => p.name === chatToLoad.provider) || aiProviders[0];
+        setSelectedProvider(providerToSelect);
+      } else {
+        // If chat not found, redirect to history
+        toast.error("Chat not found");
+        navigate("/history");
+      }
+    } else {
+      // If no chatId, create a new chat
+      const newChatId = addChat(selectedProvider.name);
+      navigate(`/chat?id=${newChatId}`, { replace: true });
+    }
+  }, [chatId, isAuthenticated, chats, setCurrentChat, navigate, addChat]);
+
   // Scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [currentChat?.messages]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to access chat");
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSendMessage = (content: string) => {
+    if (!currentChat) return;
+    
     // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
+    addMessage(currentChat.id, {
       content,
       sender: "user",
       timestamp: new Date(),
-    };
+    });
     
-    setMessages((prev) => [...prev, userMessage]);
     setIsProcessing(true);
     
     // Simulate AI response after a delay
     setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `This is a simulated response from ${selectedProvider.name}. In a real application, this would be a response from the actual AI provider.`,
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      
-      setMessages((prev) => [...prev, aiMessage]);
+      if (currentChat) {
+        addMessage(currentChat.id, {
+          content: `This is a simulated response from ${selectedProvider.name}. In a real application, this would be a response from the actual AI provider.`,
+          sender: "ai",
+          timestamp: new Date(),
+        });
+      }
       setIsProcessing(false);
     }, 1500);
+  };
+
+  const handleNewChat = () => {
+    const newChatId = addChat(selectedProvider.name);
+    navigate(`/chat?id=${newChatId}`);
   };
 
   return (
@@ -89,37 +117,60 @@ const Chat: React.FC = () => {
         {/* AI Provider Selector */}
         <div className="container py-4 border-b border-border">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Chat</h1>
-            <div className="relative">
-              <select
-                value={selectedProvider.id}
-                onChange={(e) => {
-                  const provider = aiProviders.find((p) => p.id === e.target.value);
-                  if (provider) setSelectedProvider(provider);
-                }}
-                className="appearance-none bg-secondary text-secondary-foreground px-4 py-2 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate("/history")}
+                className="md:hidden"
               >
-                {aiProviders.map((provider) => (
-                  <option key={provider.id} value={provider.id}>
-                    {provider.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="h-4 w-4 text-secondary-foreground opacity-70"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+                <ArrowLeftIcon className="h-5 w-5" />
+              </Button>
+              <h1 className="text-xl font-semibold">Chat</h1>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNewChat}
+                className="flex items-center gap-1"
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">New Chat</span>
+              </Button>
+              
+              <div className="relative">
+                <select
+                  value={selectedProvider.id}
+                  onChange={(e) => {
+                    const provider = aiProviders.find((p) => p.id === e.target.value);
+                    if (provider) setSelectedProvider(provider);
+                  }}
+                  className="appearance-none bg-secondary text-secondary-foreground px-4 py-2 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                  {aiProviders.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg
+                    className="h-4 w-4 text-secondary-foreground opacity-70"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
@@ -128,10 +179,15 @@ const Chat: React.FC = () => {
         {/* Chat Messages Area */}
         <div className="flex-grow container py-6 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
-            {messages.map((message) => (
+            {currentChat?.messages.map((message) => (
               <ChatMessage
                 key={message.id}
-                message={message}
+                message={{
+                  id: message.id,
+                  content: message.content,
+                  sender: message.sender,
+                  timestamp: new Date(message.timestamp),
+                }}
                 aiProvider={
                   message.sender === "ai" ? selectedProvider : undefined
                 }
