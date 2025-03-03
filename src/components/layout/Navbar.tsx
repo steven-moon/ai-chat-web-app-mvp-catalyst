@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MenuIcon, XIcon } from "lucide-react";
+import { MenuIcon, XIcon, UserIcon } from "lucide-react";
 import ThemeToggle from "../theme/ThemeToggle";
 
 const Navbar: React.FC = () => {
@@ -29,6 +29,7 @@ const Navbar: React.FC = () => {
     { name: "Home", path: "/" },
     { name: "Chat", path: "/chat" },
     { name: "History", path: "/history" },
+    { name: "Profile", path: "/profile" },
   ];
 
   return (
