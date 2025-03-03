@@ -1,5 +1,6 @@
 import { ChatSession, Message } from "../types/chat";
 import { createWelcomeMessage, generateTitleFromMessage, generatePreviewFromMessage, isDuplicateMessage } from "../utils/chatUtils";
+import openaiService from "./openaiApi";
 
 // Simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -44,26 +45,35 @@ class ChatApi {
   }
   
   // Create a new chat
-  async createChat(userId: string, provider: string): Promise<ChatSession> {
-    await delay(300); // Simulate network delay
-    
-    const newChat: ChatSession = {
-      id: `chat-${Date.now()}`,
-      title: "New Conversation",
-      preview: "Start a new conversation...",
-      messages: [createWelcomeMessage()],
-      timestamp: new Date(),
-      provider,
-    };
-    
+  async createChat(userId: string, provider: string, model: string): Promise<ChatSession | null> {
     try {
+      const chatId = `chat-${Date.now()}`;
+      const newChat: ChatSession = {
+        id: chatId,
+        title: "New Conversation",
+        preview: "Start a new conversation",
+        provider,
+        model,
+        messages: [
+          {
+            id: `welcome-${Date.now()}`,
+            content: "Hello! How can I assist you today?",
+            sender: "ai",
+            timestamp: new Date(),
+          },
+        ],
+        timestamp: new Date(),
+      };
+      
+      // Save the chat to local storage
       const chats = await this.getChats(userId);
       const updatedChats = [newChat, ...chats];
       await this.saveChats(userId, updatedChats);
+      
       return newChat;
     } catch (error) {
       console.error("Error creating chat:", error);
-      return newChat; // Return the new chat even if saving failed
+      return null;
     }
   }
   
@@ -196,7 +206,79 @@ class ChatApi {
     }
   }
   
-  // Simulate AI response
+  // Generate AI response based on provider
+  async generateAiResponse(userId: string, chatId: string, provider: string, model: string, apiKeys: any): Promise<ChatSession | null> {
+    try {
+      // Get the current chat to ensure we have the latest state
+      const chat = await this.getChatById(userId, chatId);
+      if (!chat) return null;
+      
+      // Get the last user message to respond to
+      const lastUserMessage = [...chat.messages].reverse().find(msg => msg.sender === "user");
+      if (!lastUserMessage) {
+        console.error("No user message found to respond to");
+        return chat;
+      }
+      
+      let aiResponse = "";
+      
+      // Generate response based on provider
+      if (provider.toLowerCase() === "openai") {
+        // Validate API key format
+        const apiKey = apiKeys?.openAI;
+        
+        // Log API key information (safely)
+        if (apiKey) {
+          const maskedKey = apiKey.length > 14 
+            ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`
+            : 'invalid-key-format';
+          console.log(`ChatAPI: Using OpenAI API key: ${maskedKey}`);
+          console.log(`ChatAPI: Using model: ${model}`);
+        } else {
+          console.log('ChatAPI: No OpenAI API key provided');
+        }
+        
+        if (!apiKey) {
+          aiResponse = "Error: No OpenAI API key found. Please add your API key in the Settings page.";
+        } else if (!apiKey.startsWith("sk-")) {
+          aiResponse = "Error: Your OpenAI API key format is invalid. API keys should start with 'sk-'.";
+        } else {
+          // Initialize OpenAI service with API key
+          const initialized = openaiService.initialize(apiKey);
+          
+          if (!initialized) {
+            aiResponse = "Error: Failed to initialize OpenAI client. Please check your API key.";
+          } else {
+            // Generate response with the specified model
+            aiResponse = await openaiService.generateResponse(
+              chat.messages, 
+              lastUserMessage.content,
+              model
+            );
+          }
+        }
+      } else {
+        // For other providers, use mock response
+        await delay(1500); // Simulate AI thinking time
+        aiResponse = `This is a simulated response from ${provider} using the ${model} model. In a real application, this would be a response from the actual AI provider.`;
+      }
+      
+      // Create AI message
+      const aiMessage: Omit<Message, "id"> = {
+        content: aiResponse,
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      
+      // Add the AI message to the chat
+      return await this.addMessage(userId, chatId, aiMessage);
+    } catch (error) {
+      console.error("Error generating AI response:", error);
+      return null;
+    }
+  }
+  
+  // Simulate AI response (legacy method, kept for backward compatibility)
   async simulateAiResponse(userId: string, chatId: string, provider: string): Promise<ChatSession | null> {
     await delay(1500); // Simulate AI thinking time
     

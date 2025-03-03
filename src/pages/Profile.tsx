@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import MainLayout from "../components/layout/MainLayout";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate, Link } from "react-router-dom";
+import AvatarSelector from "@/components/profile/AvatarSelector";
 
 const Profile: React.FC = () => {
   const { user, isAuthenticated, logout, updateProfile } = useUser();
@@ -24,6 +25,7 @@ const Profile: React.FC = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [avatar, setAvatar] = useState("");
   
   // Preferences form state
   const [defaultProvider, setDefaultProvider] = useState("OpenAI");
@@ -41,6 +43,7 @@ const Profile: React.FC = () => {
     setFirstName(nameParts[0] || "");
     setLastName(nameParts.slice(1).join(" ") || "");
     setEmail(user.email || "");
+    setAvatar(user.avatar || "");
     
     // Load preferences if they exist
     if (user.preferences) {
@@ -55,7 +58,8 @@ const Profile: React.FC = () => {
       const fullName = `${firstName} ${lastName}`.trim();
       await updateProfile({ 
         name: fullName,
-        email
+        email,
+        avatar
       });
       
       toast({
@@ -71,6 +75,28 @@ const Profile: React.FC = () => {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleAvatarChange = async (newAvatarUrl: string) => {
+    setAvatar(newAvatarUrl);
+    
+    try {
+      await updateProfile({ 
+        avatar: newAvatarUrl
+      });
+      
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been changed",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update avatar",
+        variant: "destructive",
+      });
+      console.error(error);
     }
   };
   
@@ -135,12 +161,11 @@ const Profile: React.FC = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <div className="flex justify-center">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                        {user.name.split(' ').map(name => name[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
+                    <AvatarSelector
+                      currentAvatar={avatar}
+                      userName={user.name}
+                      onAvatarChange={handleAvatarChange}
+                    />
                   </div>
                 </CardHeader>
                 <CardContent className="text-center">

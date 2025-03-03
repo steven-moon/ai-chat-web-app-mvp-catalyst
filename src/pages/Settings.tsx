@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Key, Save, AlertCircle } from "lucide-react";
+import { Key, Save, AlertCircle, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,14 @@ const Settings: React.FC = () => {
   const [googleGeminiKey, setGoogleGeminiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
   
+  // Password visibility state
+  const [showOpenAIKey, setShowOpenAIKey] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
+  
+  // Validation state
+  const [openAIKeyValid, setOpenAIKeyValid] = useState<boolean | null>(null);
+  
   // Load user data when component mounts
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -29,27 +37,167 @@ const Settings: React.FC = () => {
       return;
     }
     
+    // Debug localStorage when component mounts
+    console.log("Settings: Component mounted, checking localStorage");
+    debugLocalStorage();
+    
     // Load API keys if they exist
     if (user.preferences?.apiKeys) {
-      setOpenAIKey(user.preferences.apiKeys.openAI || "");
+      const storedOpenAIKey = user.preferences.apiKeys.openAI || "";
+      setOpenAIKey(storedOpenAIKey);
+      validateOpenAIKey(storedOpenAIKey);
+      
       setGoogleGeminiKey(user.preferences.apiKeys.googleGemini || "");
       setAnthropicKey(user.preferences.apiKeys.anthropic || "");
+      
+      console.log("Settings: Loaded API keys from user object:", {
+        openAI: storedOpenAIKey ? `${storedOpenAIKey.substring(0, 5)}...` : 'not set',
+        googleGemini: user.preferences.apiKeys.googleGemini ? `${user.preferences.apiKeys.googleGemini.substring(0, 5)}...` : 'not set',
+        anthropic: user.preferences.apiKeys.anthropic ? `${user.preferences.apiKeys.anthropic.substring(0, 5)}...` : 'not set'
+      });
+    } else {
+      console.log("Settings: No API keys found in user object");
     }
   }, [user, isAuthenticated, navigate]);
+  
+  // Validate OpenAI API key format
+  const validateOpenAIKey = (key: string): boolean => {
+    if (!key || key.trim() === "") {
+      setOpenAIKeyValid(null);
+      return false;
+    }
+    
+    const isValid = key.startsWith("sk-");
+    setOpenAIKeyValid(isValid);
+    return isValid;
+  };
+  
+  // Handle OpenAI key change
+  const handleOpenAIKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newKey = e.target.value;
+    setOpenAIKey(newKey);
+    validateOpenAIKey(newKey);
+  };
   
   const handleSaveAPIKeys = async () => {
     setIsLoading(true);
     try {
+      // Validate OpenAI key before saving
+      if (openAIKey && !validateOpenAIKey(openAIKey)) {
+        toast({
+          title: "Invalid API Key",
+          description: "Your OpenAI API key format is invalid. It should start with 'sk-'.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Log the API keys being saved (safely)
+      const trimmedOpenAIKey = openAIKey.trim();
+      const trimmedGeminiKey = googleGeminiKey.trim();
+      const trimmedAnthropicKey = anthropicKey.trim();
+      
+      console.log("Settings: Saving API keys:", {
+        openAI: trimmedOpenAIKey ? `${trimmedOpenAIKey.substring(0, 5)}...` : 'not set',
+        googleGemini: trimmedGeminiKey ? `${trimmedGeminiKey.substring(0, 5)}...` : 'not set',
+        anthropic: trimmedAnthropicKey ? `${trimmedAnthropicKey.substring(0, 5)}...` : 'not set'
+      });
+      
+      // Debug localStorage before update
+      console.log("Settings: Checking localStorage before update");
+      debugLocalStorage();
+      
+      // Create the updated preferences object
+      const updatedPreferences = {
+        ...user?.preferences,
+        apiKeys: {
+          openAI: trimmedOpenAIKey,
+          googleGemini: trimmedGeminiKey,
+          anthropic: trimmedAnthropicKey
+        }
+      };
+      
+      // Update the user profile with the new preferences
       await updateProfile({
-        preferences: {
-          ...user?.preferences,
-          apiKeys: {
-            openAI: openAIKey,
-            googleGemini: googleGeminiKey,
-            anthropic: anthropicKey
+        preferences: updatedPreferences
+      });
+      
+      // Direct update to localStorage as a fallback
+      try {
+        const currentUserJson = localStorage.getItem("currentUser");
+        if (currentUserJson) {
+          const currentUser = JSON.parse(currentUserJson);
+          
+          // Ensure preferences object exists
+          if (!currentUser.preferences) {
+            currentUser.preferences = {};
+          }
+          
+          // Ensure apiKeys object exists
+          if (!currentUser.preferences.apiKeys) {
+            currentUser.preferences.apiKeys = {};
+          }
+          
+          // Update API keys
+          currentUser.preferences.apiKeys.openAI = trimmedOpenAIKey;
+          currentUser.preferences.apiKeys.googleGemini = trimmedGeminiKey;
+          currentUser.preferences.apiKeys.anthropic = trimmedAnthropicKey;
+          
+          // Save back to localStorage
+          localStorage.setItem("currentUser", JSON.stringify(currentUser));
+          
+          console.log("Settings: Directly updated API keys in localStorage as fallback");
+        }
+        
+        // Also update the users array in localStorage
+        const usersJson = localStorage.getItem("users");
+        if (usersJson && user) {
+          const users = JSON.parse(usersJson);
+          const userIndex = users.findIndex((u: any) => u.id === user.id);
+          
+          if (userIndex !== -1) {
+            // Ensure preferences object exists
+            if (!users[userIndex].preferences) {
+              users[userIndex].preferences = {};
+            }
+            
+            // Ensure apiKeys object exists
+            if (!users[userIndex].preferences.apiKeys) {
+              users[userIndex].preferences.apiKeys = {};
+            }
+            
+            // Update API keys
+            users[userIndex].preferences.apiKeys.openAI = trimmedOpenAIKey;
+            users[userIndex].preferences.apiKeys.googleGemini = trimmedGeminiKey;
+            users[userIndex].preferences.apiKeys.anthropic = trimmedAnthropicKey;
+            
+            // Save back to localStorage
+            localStorage.setItem("users", JSON.stringify(users));
+            
+            console.log("Settings: Directly updated API keys in users array as fallback");
           }
         }
-      });
+      } catch (error) {
+        console.error("Error directly updating localStorage:", error);
+      }
+      
+      // Verify the keys were saved by checking localStorage directly
+      const verifyUserJson = localStorage.getItem("currentUser");
+      if (verifyUserJson) {
+        const verifyUser = JSON.parse(verifyUserJson);
+        const savedKeys = verifyUser.preferences?.apiKeys;
+        
+        console.log("Settings: Verified saved API keys in localStorage:", {
+          openAI: savedKeys?.openAI ? `${savedKeys.openAI.substring(0, 5)}...` : 'not set',
+          googleGemini: savedKeys?.googleGemini ? `${savedKeys.googleGemini.substring(0, 5)}...` : 'not set',
+          anthropic: savedKeys?.anthropic ? `${savedKeys.anthropic.substring(0, 5)}...` : 'not set'
+        });
+      }
+      
+      // Debug localStorage after update
+      console.log("Settings: Checking localStorage after update");
+      debugLocalStorage();
       
       toast({
         title: "API Keys saved",
@@ -61,9 +209,37 @@ const Settings: React.FC = () => {
         description: "Failed to save API keys",
         variant: "destructive",
       });
-      console.error(error);
+      console.error("Error saving API keys:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Debug function to log localStorage state
+  const debugLocalStorage = () => {
+    try {
+      const currentUserJson = localStorage.getItem("currentUser");
+      const isAuthenticatedValue = localStorage.getItem("isAuthenticated");
+      const usersJson = localStorage.getItem("users");
+      
+      console.log("Settings DEBUG - localStorage state:", {
+        isAuthenticated: isAuthenticatedValue,
+        hasCurrentUser: !!currentUserJson,
+        hasUsers: !!usersJson,
+        currentUser: currentUserJson ? JSON.parse(currentUserJson) : null,
+        users: usersJson ? JSON.parse(usersJson).map((u: any) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          hasPreferences: !!u.preferences,
+          hasApiKeys: !!(u.preferences?.apiKeys),
+          apiKeys: u.preferences?.apiKeys ? {
+            openAI: u.preferences.apiKeys.openAI ? `${u.preferences.apiKeys.openAI.substring(0, 5)}...` : 'not set'
+          } : 'none'
+        })) : []
+      });
+    } catch (error) {
+      console.error("Error debugging localStorage:", error);
     }
   };
 
@@ -108,13 +284,41 @@ const Settings: React.FC = () => {
                 <label className="text-sm font-medium">OpenAI API Key</label>
                 <div className="flex items-center space-x-2">
                   <Key className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="sk-..."
-                    value={openAIKey}
-                    onChange={(e) => setOpenAIKey(e.target.value)}
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      type={showOpenAIKey ? "text" : "password"}
+                      placeholder="sk-..."
+                      value={openAIKey}
+                      onChange={handleOpenAIKeyChange}
+                      className={openAIKeyValid === false ? "border-red-500" : ""}
+                    />
+                    <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                      {openAIKeyValid === true && (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      )}
+                      {openAIKeyValid === false && (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowOpenAIKey(!showOpenAIKey)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showOpenAIKey ? "Hide API key" : "Show API key"}
+                    >
+                      {showOpenAIKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
+                {openAIKeyValid === false && (
+                  <p className="text-xs text-red-500">
+                    Invalid API key format. OpenAI API keys should start with "sk-".
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Get your API key from the <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">OpenAI dashboard</a>.
                 </p>
@@ -124,12 +328,26 @@ const Settings: React.FC = () => {
                 <label className="text-sm font-medium">Google Gemini API Key</label>
                 <div className="flex items-center space-x-2">
                   <Key className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="AIza..."
-                    value={googleGeminiKey}
-                    onChange={(e) => setGoogleGeminiKey(e.target.value)}
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      type={showGeminiKey ? "text" : "password"}
+                      placeholder="AIza..."
+                      value={googleGeminiKey}
+                      onChange={(e) => setGoogleGeminiKey(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGeminiKey(!showGeminiKey)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showGeminiKey ? "Hide API key" : "Show API key"}
+                    >
+                      {showGeminiKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Get your API key from the <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>.
@@ -140,12 +358,26 @@ const Settings: React.FC = () => {
                 <label className="text-sm font-medium">Anthropic Claude API Key</label>
                 <div className="flex items-center space-x-2">
                   <Key className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="sk-ant-..."
-                    value={anthropicKey}
-                    onChange={(e) => setAnthropicKey(e.target.value)}
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      type={showAnthropicKey ? "text" : "password"}
+                      placeholder="sk-ant-..."
+                      value={anthropicKey}
+                      onChange={(e) => setAnthropicKey(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAnthropicKey(!showAnthropicKey)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showAnthropicKey ? "Hide API key" : "Show API key"}
+                    >
+                      {showAnthropicKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Get your API key from the <a href="https://console.anthropic.com/keys" target="_blank" rel="noopener noreferrer" className="underline">Anthropic Console</a>.
@@ -156,7 +388,7 @@ const Settings: React.FC = () => {
               <Button 
                 className="ml-auto"
                 onClick={handleSaveAPIKeys}
-                disabled={isLoading}
+                disabled={isLoading || openAIKeyValid === false}
               >
                 {isLoading ? "Saving..." : "Save API Keys"}
                 {!isLoading && <Save className="ml-2 h-4 w-4" />}

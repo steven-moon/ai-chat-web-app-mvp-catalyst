@@ -34,7 +34,7 @@ const History: React.FC = () => {
     
     setIsCreatingChat(true);
     try {
-      const newChatId = await addChat("OpenAI");
+      const newChatId = await addChat("OpenAI", "gpt-3.5-turbo");
       if (newChatId) {
         navigate(`/chat?id=${newChatId}`);
       } else {
@@ -64,7 +64,7 @@ const History: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="min-h-screen pt-28 pb-16">
+      <div className="min-h-[calc(100vh-64px)] pt-28 pb-16 overflow-y-auto">
         <div className="container">
           <div className="max-w-4xl mx-auto">
             <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

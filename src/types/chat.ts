@@ -1,4 +1,3 @@
-
 // Defines types for chat functionality
 export interface Message {
   id: string;
@@ -11,7 +10,8 @@ export interface ChatSession {
   id: string;
   title: string;
   preview: string;
+  provider: string;
+  model: string;
   messages: Message[];
   timestamp: Date;
-  provider: string;
 }

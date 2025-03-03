@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -57,11 +56,12 @@ const Navbar: React.FC = () => {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-sm"
-          : "py-6 bg-transparent"
+          ? "py-4 bg-white dark:bg-gray-900 shadow-sm"
+          : "py-6 bg-white dark:bg-gray-900"
       }`}
+      style={{ height: '60px' }}
     >
-      <div className="container flex items-center justify-between">
+      <div className="container flex items-center justify-between h-full">
         <Link to="/" className="flex items-center">
           <motion.div
             whileHover={{ scale: 1.05 }}

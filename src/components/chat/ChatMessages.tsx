@@ -2,21 +2,20 @@ import React, { useRef, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
 import ProcessingIndicator from "./ProcessingIndicator";
 import { Message } from "../../types/chat";
+import { AIProvider } from "./ProviderSelector";
 
 interface ChatMessagesProps {
   messages: Message[];
   isProcessing: boolean;
-  aiProvider: {
-    id: string;
-    name: string;
-    icon: React.ReactNode;
-  };
+  aiProvider: AIProvider;
+  modelName?: string;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   messages,
   isProcessing,
   aiProvider,
+  modelName,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -25,17 +24,24 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Add debugging log
-  useEffect(() => {
-    console.log("ChatMessages received messages:", messages.length);
-    messages.forEach((msg, index) => {
-      console.log(`Message ${index}: ${msg.sender} - ${msg.content.substring(0, 20)}...`);
-    });
-  }, [messages]);
-
   return (
-    <div className="flex-grow container py-6 overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-full px-4">
+      <div className="max-w-4xl mx-auto py-6">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+            <div className="text-4xl mb-4">{aiProvider.icon}</div>
+            <h3 className="text-xl font-medium mb-2">Start a conversation with {aiProvider.name}</h3>
+            {modelName && (
+              <p className="text-sm text-muted-foreground mb-4">
+                Using model: <span className="font-medium">{modelName}</span>
+              </p>
+            )}
+            <p className="text-muted-foreground max-w-md">
+              Ask a question or start a conversation to get assistance from AI.
+            </p>
+          </div>
+        )}
+        
         {messages.map((message) => (
           <ChatMessage
             key={message.id}
@@ -48,6 +54,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             aiProvider={
               message.sender === "ai" ? aiProvider : undefined
             }
+            modelName={message.sender === "ai" ? modelName : undefined}
           />
         ))}
         <div ref={messagesEndRef} />

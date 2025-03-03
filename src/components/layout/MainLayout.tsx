@@ -1,4 +1,3 @@
-
 import React from "react";
 import Navbar from "./Navbar";
 import { motion } from "framer-motion";
@@ -33,14 +32,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen overflow-auto">
       <Navbar />
       <motion.main
         initial="initial"
         animate="enter"
         exit="exit"
         variants={pageVariants}
-        className="flex-grow"
+        className="flex-grow relative"
       >
         {children}
       </motion.main>
