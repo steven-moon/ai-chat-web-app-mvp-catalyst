@@ -221,7 +221,7 @@ const Index: React.FC = () => {
                 <span className="text-primary">AI</span>Chat
               </div>
               <p className="text-sm text-muted-foreground">
-                &copy; {new Date().getFullYear()} AI Chat Bot. All rights reserved.
+                &copy; {new Date().getFullYear()} Clever Coding LLC. MIT License <a href="https://www.clevercoding.com" target="_blank" rel="noopener noreferrer">www.clevercoding.com</a>
               </p>
             </div>
             <div className="flex space-x-4">
