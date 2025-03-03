@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -29,6 +28,7 @@ const Navbar: React.FC = () => {
     { name: "Home", path: "/" },
     { name: "Chat", path: "/chat" },
     { name: "History", path: "/history" },
+    { name: "Pricing", path: "/pricing" },
     { name: "Profile", path: "/profile" },
   ];
 
