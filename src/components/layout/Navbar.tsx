@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MenuIcon, XIcon, UserIcon } from "lucide-react";
+import { MenuIcon, XIcon, UserIcon, LogIn } from "lucide-react";
 import ThemeToggle from "../theme/ThemeToggle";
+import { Button } from "@/components/ui/button";
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,7 +31,6 @@ const Navbar: React.FC = () => {
     { name: "Chat", path: "/chat" },
     { name: "History", path: "/history" },
     { name: "Pricing", path: "/pricing" },
-    { name: "Profile", path: "/profile" },
   ];
 
   return (
@@ -53,7 +54,7 @@ const Navbar: React.FC = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
+        <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
             {navLinks.map((link) => (
               <Link
@@ -78,6 +79,25 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
           </nav>
+          
+          {/* Auth buttons */}
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/login" className="flex items-center gap-1">
+                <LogIn className="h-4 w-4" />
+                Login
+              </Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link to="/signup">Sign up</Link>
+            </Button>
+            <Link to="/profile" className="ml-2">
+              <Button variant="outline" size="icon" className="rounded-full">
+                <UserIcon className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          
           <ThemeToggle />
         </div>
 
@@ -119,6 +139,24 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            <Link
+              to="/login"
+              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md"
+            >
+              Sign up
+            </Link>
+            <Link
+              to="/profile"
+              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+            >
+              Profile
+            </Link>
           </nav>
         </motion.div>
       )}
