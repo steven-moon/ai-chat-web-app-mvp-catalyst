@@ -2,6 +2,7 @@ import { ChatSession, Message } from "../types/chat";
 import { createWelcomeMessage, generateTitleFromMessage, generatePreviewFromMessage, isDuplicateMessage } from "../utils/chatUtils";
 import openaiService from "./openaiApi";
 import geminiService from "./geminiApi";
+import anthropicService from "./anthropicApi";
 
 // Simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -284,6 +285,40 @@ class ChatApi {
           } else {
             // Generate response with the specified model
             aiResponse = await geminiService.generateResponse(
+              chat.messages, 
+              lastUserMessage.content,
+              model
+            );
+          }
+        }
+      } else if (provider.toLowerCase() === "claude") {
+        // Validate API key format
+        const apiKey = apiKeys?.anthropic;
+        
+        // Log API key information (safely)
+        if (apiKey) {
+          const maskedKey = apiKey.length > 14 
+            ? `${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`
+            : 'invalid-key-format';
+          console.log(`ChatAPI: Using Anthropic API key: ${maskedKey}`);
+          console.log(`ChatAPI: Using model: ${model}`);
+        } else {
+          console.log('ChatAPI: No Anthropic API key provided');
+        }
+        
+        if (!apiKey) {
+          aiResponse = "Error: No Anthropic API key found. Please add your API key in the Settings page.";
+        } else if (!apiKey.startsWith("sk-ant")) {
+          aiResponse = "Error: Your Anthropic API key format is invalid. API keys should start with 'sk-ant'.";
+        } else {
+          // Initialize Anthropic service with API key
+          const initialized = anthropicService.initialize(apiKey);
+          
+          if (!initialized) {
+            aiResponse = "Error: Failed to initialize Anthropic client. Please check your API key.";
+          } else {
+            // Generate response with the specified model
+            aiResponse = await anthropicService.generateResponse(
               chat.messages, 
               lastUserMessage.content,
               model

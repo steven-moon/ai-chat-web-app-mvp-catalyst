@@ -8,6 +8,7 @@ A modern, responsive web application for interacting with various AI models thro
 - **Chat History Management**: Save, browse, and continue previous conversations
 - **User Authentication**: Secure login and signup functionality
 - **User Profile Management**: Customize user settings and preferences
+- **User Preferences**: Persistent storage of user settings, including last used AI provider and model ([details](README-user-preferences.md))
 - **Responsive Design**: Optimized for both desktop and mobile devices
 - **Modern UI**: Built with Shadcn UI components and Tailwind CSS for a sleek, modern look
 
@@ -53,6 +54,16 @@ src/
 ├── App.tsx             # Main application component
 └── main.tsx            # Application entry point
 ```
+
+## Documentation
+
+Detailed documentation for specific features:
+
+- [API Integrations](README-api-integrations.md): Documentation for OpenAI, Google Gemini, and Anthropic Claude API integrations
+- [Avatar Selector](README-avatar-selector.md): Documentation for the avatar selection and customization feature
+- [User Preferences](README-user-preferences.md): Documentation for the user preferences system
+- [Anthropic API Integration](README-anthropic-proxy.md): Documentation for the Anthropic Claude API integration using the official SDK with CORS support
+- [Anthropic SDK Update](README-anthropic-sdk-update.md): Summary of changes made to update the Anthropic API integration to use the official SDK
 
 ## Getting Started
 

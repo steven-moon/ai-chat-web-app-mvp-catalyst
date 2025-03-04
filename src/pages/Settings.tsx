@@ -30,6 +30,7 @@ const Settings: React.FC = () => {
   // Validation state
   const [openAIKeyValid, setOpenAIKeyValid] = useState<boolean | null>(null);
   const [geminiKeyValid, setGeminiKeyValid] = useState<boolean | null>(null);
+  const [anthropicKeyValid, setAnthropicKeyValid] = useState<boolean | null>(null);
   
   // Load user data when component mounts
   useEffect(() => {
@@ -48,13 +49,18 @@ const Settings: React.FC = () => {
       setOpenAIKey(storedOpenAIKey);
       validateOpenAIKey(storedOpenAIKey);
       
-      setGoogleGeminiKey(user.preferences.apiKeys.googleGemini || "");
-      setAnthropicKey(user.preferences.apiKeys.anthropic || "");
+      const storedGeminiKey = user.preferences.apiKeys.googleGemini || "";
+      setGoogleGeminiKey(storedGeminiKey);
+      validateGeminiKey(storedGeminiKey);
+      
+      const storedAnthropicKey = user.preferences.apiKeys.anthropic || "";
+      setAnthropicKey(storedAnthropicKey);
+      validateAnthropicKey(storedAnthropicKey);
       
       console.log("Settings: Loaded API keys from user object:", {
         openAI: storedOpenAIKey ? `${storedOpenAIKey.substring(0, 5)}...` : 'not set',
-        googleGemini: user.preferences.apiKeys.googleGemini ? `${user.preferences.apiKeys.googleGemini.substring(0, 5)}...` : 'not set',
-        anthropic: user.preferences.apiKeys.anthropic ? `${user.preferences.apiKeys.anthropic.substring(0, 5)}...` : 'not set'
+        googleGemini: storedGeminiKey ? `${storedGeminiKey.substring(0, 5)}...` : 'not set',
+        anthropic: storedAnthropicKey ? `${storedAnthropicKey.substring(0, 5)}...` : 'not set'
       });
     } else {
       console.log("Settings: No API keys found in user object");
@@ -75,6 +81,13 @@ const Settings: React.FC = () => {
     return isValid;
   };
   
+  // Validate Anthropic API key format
+  const validateAnthropicKey = (key: string): boolean => {
+    const isValid = key === "" || key.startsWith("sk-ant");
+    setAnthropicKeyValid(key === "" ? null : isValid);
+    return isValid;
+  };
+  
   // Handle OpenAI key change
   const handleOpenAIKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newKey = e.target.value;
@@ -87,6 +100,13 @@ const Settings: React.FC = () => {
     const newKey = e.target.value;
     setGoogleGeminiKey(newKey);
     validateGeminiKey(newKey);
+  };
+  
+  // Handle Anthropic key change
+  const handleAnthropicKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newKey = e.target.value;
+    setAnthropicKey(newKey);
+    validateAnthropicKey(newKey);
   };
   
   const handleSaveAPIKeys = async () => {
@@ -113,6 +133,17 @@ const Settings: React.FC = () => {
         toast({
           title: "Invalid Google Gemini API Key",
           description: "Google Gemini API keys should start with 'AIza'",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Validate Anthropic key format
+      if (trimmedAnthropicKey && !validateAnthropicKey(trimmedAnthropicKey)) {
+        toast({
+          title: "Invalid Anthropic API Key",
+          description: "Anthropic API keys should start with 'sk-ant'",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -399,8 +430,17 @@ const Settings: React.FC = () => {
                       type={showAnthropicKey ? "text" : "password"}
                       placeholder="sk-ant-..."
                       value={anthropicKey}
-                      onChange={(e) => setAnthropicKey(e.target.value)}
+                      onChange={handleAnthropicKeyChange}
+                      className={anthropicKeyValid === false ? "border-red-500" : ""}
                     />
+                    <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                      {anthropicKeyValid === true && (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      )}
+                      {anthropicKeyValid === false && (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => setShowAnthropicKey(!showAnthropicKey)}
@@ -415,6 +455,11 @@ const Settings: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                {anthropicKeyValid === false && (
+                  <p className="text-xs text-red-500">
+                    Invalid API key format. Anthropic API keys should start with "sk-ant".
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Get your API key from the <a href="https://console.anthropic.com/keys" target="_blank" rel="noopener noreferrer" className="underline">Anthropic Console</a>.
                 </p>
@@ -424,7 +469,7 @@ const Settings: React.FC = () => {
               <Button 
                 className="ml-auto"
                 onClick={handleSaveAPIKeys}
-                disabled={isLoading || openAIKeyValid === false || geminiKeyValid === false}
+                disabled={isLoading || openAIKeyValid === false || geminiKeyValid === false || anthropicKeyValid === false}
               >
                 {isLoading ? "Saving..." : "Save API Keys"}
                 {!isLoading && <Save className="ml-2 h-4 w-4" />}

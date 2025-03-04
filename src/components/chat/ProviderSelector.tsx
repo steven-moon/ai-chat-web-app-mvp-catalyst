@@ -51,11 +51,12 @@ export const aiProviders: AIProvider[] = [
     name: "Anthropic Claude",
     icon: <MessageSquareIcon className="h-5 w-5" />,
     models: [
-      { id: "claude-3-opus", name: "Claude 3 Opus", description: "Most powerful Claude model" },
-      { id: "claude-3-sonnet", name: "Claude 3 Sonnet", description: "Balanced performance and speed" },
-      { id: "claude-3-haiku", name: "Claude 3 Haiku", description: "Fast and efficient" },
+      { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku", description: "Fast and efficient" },
+      { id: "claude-3-sonnet-20240229", name: "Claude 3 Sonnet", description: "Balanced performance and speed" },
+      { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet v2", description: "Latest Claude model with enhanced capabilities" },
+      { id: "claude-3-7-sonnet-20250219", name: "Claude 3.7 Sonnet", description: "Most intelligent Claude model" },
     ],
-    defaultModel: "claude-3-sonnet",
+    defaultModel: "claude-3-haiku-20240307",
   },
 ];
 

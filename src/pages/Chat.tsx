@@ -13,7 +13,7 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Chat: React.FC = () => {
-  const { isAuthenticated, user } = useUser();
+  const { isAuthenticated, user, updateProfile } = useUser();
   const { 
     chats, 
     currentChat, 
@@ -30,9 +30,28 @@ const Chat: React.FC = () => {
   const chatId = searchParams.get("id");
   const navigate = useNavigate();
   
+  // Find the default provider and model from user preferences or use the first provider
+  const getInitialProvider = () => {
+    if (user?.preferences?.lastUsedProvider) {
+      const savedProvider = aiProviders.find(p => p.id === user.preferences.lastUsedProvider);
+      if (savedProvider) {
+        return savedProvider;
+      }
+    }
+    return aiProviders[0];
+  };
+
+  const getInitialModel = (provider: AIProvider) => {
+    if (user?.preferences?.lastUsedModel && 
+        provider.models.some(m => m.id === user.preferences.lastUsedModel)) {
+      return user.preferences.lastUsedModel;
+    }
+    return provider.defaultModel;
+  };
+
   // Local state for UI
-  const [selectedProvider, setSelectedProvider] = useState<AIProvider>(aiProviders[0]);
-  const [selectedModel, setSelectedModel] = useState<string>(aiProviders[0].defaultModel);
+  const [selectedProvider, setSelectedProvider] = useState<AIProvider>(getInitialProvider());
+  const [selectedModel, setSelectedModel] = useState<string>(getInitialModel(getInitialProvider()));
   const [isProcessing, setIsProcessing] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
@@ -51,56 +70,84 @@ const Chat: React.FC = () => {
       } else {
         setApiKeyError(null);
       }
+    } else {
+      setLocalMessages([]);
     }
   }, [currentChat]);
 
+  // Update selected provider and model when user changes
+  useEffect(() => {
+    if (user) {
+      const provider = getInitialProvider();
+      setSelectedProvider(provider);
+      setSelectedModel(getInitialModel(provider));
+      
+      console.log("Loaded user preferences for provider and model:", {
+        provider: provider.id,
+        model: getInitialModel(provider),
+        fromPreferences: !!user.preferences?.lastUsedProvider
+      });
+    }
+  }, [user]);
+
   // Load chat data when chatId changes
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    if (chatId) {
-      const chatToLoad = chats.find(chat => chat.id === chatId);
-      if (chatToLoad) {
-        setCurrentChat(chatToLoad);
-        
-        // Set the selected provider based on the chat's provider
-        const providerToSelect = aiProviders.find(p => p.id === chatToLoad.provider) || aiProviders[0];
-        setSelectedProvider(providerToSelect);
-        
-        // Set the selected model based on the chat's model or use the default
-        setSelectedModel(chatToLoad.model || providerToSelect.defaultModel);
+    const loadChat = async () => {
+      if (chatId) {
+        const chat = chats.find(c => c.id === chatId);
+        if (chat) {
+          setCurrentChat(chat);
+          
+          // If the chat has a provider and model, use those
+          if (chat.provider && chat.model) {
+            const provider = aiProviders.find(p => p.id === chat.provider) || aiProviders[0];
+            setSelectedProvider(provider);
+            setSelectedModel(chat.model);
+            
+            console.log("Using provider and model from chat:", {
+              provider: provider.id,
+              model: chat.model
+            });
+          }
+        } else {
+          // If chat not found, create a new one with the current provider and model
+          const newChatId = await addChat(selectedProvider.id, selectedModel);
+          if (newChatId) {
+            navigate(`/chat?id=${newChatId}`);
+          } else {
+            toast.error("Failed to create chat");
+            navigate("/");
+          }
+        }
       } else {
-        toast.error("Chat not found");
-        navigate("/history");
-      }
-    } else {
-      // If no chatId, create a new chat
-      const createNewChat = async () => {
+        // No chatId provided, create a new chat with the current provider and model
         const newChatId = await addChat(selectedProvider.id, selectedModel);
         if (newChatId) {
-          navigate(`/chat?id=${newChatId}`, { replace: true });
+          navigate(`/chat?id=${newChatId}`);
         } else {
-          toast.error("Failed to create new chat");
+          toast.error("Failed to create chat");
+          navigate("/");
         }
-      };
-      
-      createNewChat();
+      }
+    };
+
+    if (isAuthenticated) {
+      loadChat();
     }
-  }, [chatId, isAuthenticated, chats, setCurrentChat, navigate, addChat]);
+  }, [chatId, chats, isAuthenticated, navigate, addChat, selectedProvider.id, selectedModel]);
 
   // Check if API key is valid for the selected provider
   useEffect(() => {
     if (selectedProvider.id === "openai") {
       const openAIKey = user?.preferences?.apiKeys?.openAI;
       
-      // Log API key status (safely)
-      console.log("Chat: Checking OpenAI API key:", {
-        userExists: !!user,
-        preferencesExist: !!user?.preferences,
+      console.log("Chat: Checking OpenAI API key and user preferences:", {
         apiKeysExist: !!user?.preferences?.apiKeys,
         openAIKeyExists: !!openAIKey,
         openAIKeyValid: openAIKey ? openAIKey.startsWith("sk-") : false,
-        openAIKeyMasked: openAIKey ? `${openAIKey.substring(0, 5)}...` : 'not set'
+        openAIKeyMasked: openAIKey ? `${openAIKey.substring(0, 5)}...` : 'not set',
+        lastUsedProvider: user?.preferences?.lastUsedProvider || 'not set',
+        lastUsedModel: user?.preferences?.lastUsedModel || 'not set'
       });
       
       if (!openAIKey) {
@@ -143,6 +190,8 @@ const Chat: React.FC = () => {
                         !!apiKeys.openAI : 
                         selectedProvider.id === "gemini" ? 
                         !!apiKeys.googleGemini : 
+                        selectedProvider.id === "claude" ?
+                        !!apiKeys.anthropic :
                         false);
       
       // Log API key information (safely)
@@ -154,11 +203,13 @@ const Chat: React.FC = () => {
         openAIKeyValid: apiKeys?.openAI ? apiKeys.openAI.startsWith("sk-") : false,
         openAIKeyMasked: apiKeys?.openAI ? `${apiKeys.openAI.substring(0, 5)}...` : 'not set',
         geminiKeyExists: !!apiKeys?.googleGemini,
-        geminiKeyMasked: apiKeys?.googleGemini ? `${apiKeys.googleGemini.substring(0, 5)}...` : 'not set'
+        geminiKeyMasked: apiKeys?.googleGemini ? `${apiKeys.googleGemini.substring(0, 5)}...` : 'not set',
+        anthropicKeyExists: !!apiKeys?.anthropic,
+        anthropicKeyMasked: apiKeys?.anthropic ? `${apiKeys.anthropic.substring(0, 5)}...` : 'not set'
       });
       
       // Generate AI response
-      if ((selectedProvider.id === "openai" || selectedProvider.id === "gemini") && hasApiKey) {
+      if ((selectedProvider.id === "openai" || selectedProvider.id === "gemini" || selectedProvider.id === "claude") && hasApiKey) {
         // Use real API
         await generateAiResponse(chatId, selectedProvider.id, selectedModel);
       } else {
@@ -191,6 +242,27 @@ const Chat: React.FC = () => {
     if (currentChat && chatId) {
       updateChatProvider(chatId, providerId, modelId);
       toast.success(`Switched to ${provider.name} with model ${modelId}`);
+    }
+
+    // Save the selected provider and model to user preferences
+    if (user && user.preferences) {
+      const updatedPreferences = {
+        ...user.preferences,
+        lastUsedProvider: providerId,
+        lastUsedModel: modelId
+      };
+      
+      // Update user preferences
+      updateProfile({
+        preferences: updatedPreferences
+      }).then(() => {
+        console.log("Saved last used provider and model to preferences:", {
+          provider: providerId,
+          model: modelId
+        });
+      }).catch(error => {
+        console.error("Failed to save provider preferences:", error);
+      });
     }
   };
 
