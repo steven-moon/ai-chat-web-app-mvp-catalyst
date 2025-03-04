@@ -123,29 +123,15 @@ const Chat: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSendMessage = async (content: string) => {
-    if (!currentChat) return;
+  const handleSendMessage = async (message: string) => {
+    if (!chatId || !message.trim() || isProcessing) return;
     
-    const chatId = currentChat.id;
-    
-    // Create a temporary user message for immediate display
-    const tempUserMessage: Message = {
-      id: `temp-user-msg-${Date.now()}`,
-      content,
-      sender: "user",
-      timestamp: new Date(),
-    };
-    
-    // Update local messages immediately for better UX
-    setLocalMessages(prev => [...prev, tempUserMessage]);
-    
-    // Set processing state
     setIsProcessing(true);
     
     try {
-      // Add the user message to the chat
+      // Add user message to chat
       await addMessage(chatId, {
-        content,
+        content: message,
         sender: "user",
         timestamp: new Date(),
       });
@@ -155,6 +141,8 @@ const Chat: React.FC = () => {
       const hasApiKey = apiKeys && 
                       (selectedProvider.id === "openai" ? 
                         !!apiKeys.openAI : 
+                        selectedProvider.id === "gemini" ? 
+                        !!apiKeys.googleGemini : 
                         false);
       
       // Log API key information (safely)
@@ -164,12 +152,14 @@ const Chat: React.FC = () => {
         hasApiKeys: !!apiKeys,
         openAIKeyExists: !!apiKeys?.openAI,
         openAIKeyValid: apiKeys?.openAI ? apiKeys.openAI.startsWith("sk-") : false,
-        openAIKeyMasked: apiKeys?.openAI ? `${apiKeys.openAI.substring(0, 5)}...` : 'not set'
+        openAIKeyMasked: apiKeys?.openAI ? `${apiKeys.openAI.substring(0, 5)}...` : 'not set',
+        geminiKeyExists: !!apiKeys?.googleGemini,
+        geminiKeyMasked: apiKeys?.googleGemini ? `${apiKeys.googleGemini.substring(0, 5)}...` : 'not set'
       });
       
       // Generate AI response
-      if (selectedProvider.id === "openai" && hasApiKey) {
-        // Use real OpenAI API
+      if ((selectedProvider.id === "openai" || selectedProvider.id === "gemini") && hasApiKey) {
+        // Use real API
         await generateAiResponse(chatId, selectedProvider.id, selectedModel);
       } else {
         // Use mock response for other providers or if no API key

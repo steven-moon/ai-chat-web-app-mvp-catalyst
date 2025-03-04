@@ -39,8 +39,10 @@ export const aiProviders: AIProvider[] = [
     name: "Google Gemini",
     icon: <MessageSquareIcon className="h-5 w-5" />,
     models: [
-      { id: "gemini-pro", name: "Gemini Pro", description: "Google's most capable model" },
-      { id: "gemini-flash", name: "Gemini Flash", description: "Fast and efficient model" },
+      { id: "gemini-pro", name: "Gemini Pro", description: "Google's most capable text model" },
+      { id: "gemini-pro-vision", name: "Gemini Pro Vision", description: "Handles both text and images" },
+      { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "Advanced multimodal capabilities" },
+      { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", description: "Fast and efficient model" },
     ],
     defaultModel: "gemini-pro",
   },

@@ -29,6 +29,7 @@ const Settings: React.FC = () => {
   
   // Validation state
   const [openAIKeyValid, setOpenAIKeyValid] = useState<boolean | null>(null);
+  const [geminiKeyValid, setGeminiKeyValid] = useState<boolean | null>(null);
   
   // Load user data when component mounts
   useEffect(() => {
@@ -62,13 +63,15 @@ const Settings: React.FC = () => {
   
   // Validate OpenAI API key format
   const validateOpenAIKey = (key: string): boolean => {
-    if (!key || key.trim() === "") {
-      setOpenAIKeyValid(null);
-      return false;
-    }
-    
-    const isValid = key.startsWith("sk-");
-    setOpenAIKeyValid(isValid);
+    const isValid = key === "" || key.startsWith("sk-");
+    setOpenAIKeyValid(key === "" ? null : isValid);
+    return isValid;
+  };
+  
+  // Validate Gemini API key format
+  const validateGeminiKey = (key: string): boolean => {
+    const isValid = key === "" || key.startsWith("AIza");
+    setGeminiKeyValid(key === "" ? null : isValid);
     return isValid;
   };
   
@@ -79,14 +82,37 @@ const Settings: React.FC = () => {
     validateOpenAIKey(newKey);
   };
   
+  // Handle Gemini key change
+  const handleGeminiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newKey = e.target.value;
+    setGoogleGeminiKey(newKey);
+    validateGeminiKey(newKey);
+  };
+  
   const handleSaveAPIKeys = async () => {
     setIsLoading(true);
     try {
-      // Validate OpenAI key before saving
-      if (openAIKey && !validateOpenAIKey(openAIKey)) {
+      // Trim whitespace from keys
+      const trimmedOpenAIKey = openAIKey.trim();
+      const trimmedGeminiKey = googleGeminiKey.trim();
+      const trimmedAnthropicKey = anthropicKey.trim();
+      
+      // Validate OpenAI key format
+      if (trimmedOpenAIKey && !validateOpenAIKey(trimmedOpenAIKey)) {
         toast({
-          title: "Invalid API Key",
-          description: "Your OpenAI API key format is invalid. It should start with 'sk-'.",
+          title: "Invalid OpenAI API Key",
+          description: "OpenAI API keys should start with 'sk-'",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate Gemini key format
+      if (trimmedGeminiKey && !validateGeminiKey(trimmedGeminiKey)) {
+        toast({
+          title: "Invalid Google Gemini API Key",
+          description: "Google Gemini API keys should start with 'AIza'",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -94,10 +120,6 @@ const Settings: React.FC = () => {
       }
       
       // Log the API keys being saved (safely)
-      const trimmedOpenAIKey = openAIKey.trim();
-      const trimmedGeminiKey = googleGeminiKey.trim();
-      const trimmedAnthropicKey = anthropicKey.trim();
-      
       console.log("Settings: Saving API keys:", {
         openAI: trimmedOpenAIKey ? `${trimmedOpenAIKey.substring(0, 5)}...` : 'not set',
         googleGemini: trimmedGeminiKey ? `${trimmedGeminiKey.substring(0, 5)}...` : 'not set',
@@ -333,8 +355,17 @@ const Settings: React.FC = () => {
                       type={showGeminiKey ? "text" : "password"}
                       placeholder="AIza..."
                       value={googleGeminiKey}
-                      onChange={(e) => setGoogleGeminiKey(e.target.value)}
+                      onChange={handleGeminiKeyChange}
+                      className={geminiKeyValid === false ? "border-red-500" : ""}
                     />
+                    <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                      {geminiKeyValid === true && (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      )}
+                      {geminiKeyValid === false && (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => setShowGeminiKey(!showGeminiKey)}
@@ -349,8 +380,13 @@ const Settings: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                {geminiKeyValid === false && (
+                  <p className="text-xs text-red-500">
+                    Invalid API key format. Google Gemini API keys should start with "AIza".
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Get your API key from the <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>.
+                  Get your API key from the <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>.
                 </p>
               </div>
               
@@ -388,7 +424,7 @@ const Settings: React.FC = () => {
               <Button 
                 className="ml-auto"
                 onClick={handleSaveAPIKeys}
-                disabled={isLoading || openAIKeyValid === false}
+                disabled={isLoading || openAIKeyValid === false || geminiKeyValid === false}
               >
                 {isLoading ? "Saving..." : "Save API Keys"}
                 {!isLoading && <Save className="ml-2 h-4 w-4" />}

@@ -1,6 +1,7 @@
 import { ChatSession, Message } from "../types/chat";
 import { createWelcomeMessage, generateTitleFromMessage, generatePreviewFromMessage, isDuplicateMessage } from "../utils/chatUtils";
 import openaiService from "./openaiApi";
+import geminiService from "./geminiApi";
 
 // Simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -251,6 +252,38 @@ class ChatApi {
           } else {
             // Generate response with the specified model
             aiResponse = await openaiService.generateResponse(
+              chat.messages, 
+              lastUserMessage.content,
+              model
+            );
+          }
+        }
+      } else if (provider.toLowerCase() === "gemini") {
+        // Validate API key format
+        const apiKey = apiKeys?.googleGemini;
+        
+        // Log API key information (safely)
+        if (apiKey) {
+          const maskedKey = apiKey.length > 10 
+            ? `${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)}`
+            : 'invalid-key-format';
+          console.log(`ChatAPI: Using Gemini API key: ${maskedKey}`);
+          console.log(`ChatAPI: Using model: ${model}`);
+        } else {
+          console.log('ChatAPI: No Gemini API key provided');
+        }
+        
+        if (!apiKey) {
+          aiResponse = "Error: No Google Gemini API key found. Please add your API key in the Settings page.";
+        } else {
+          // Initialize Gemini service with API key
+          const initialized = geminiService.initialize(apiKey);
+          
+          if (!initialized) {
+            aiResponse = "Error: Failed to initialize Gemini client. Please check your API key.";
+          } else {
+            // Generate response with the specified model
+            aiResponse = await geminiService.generateResponse(
               chat.messages, 
               lastUserMessage.content,
               model
